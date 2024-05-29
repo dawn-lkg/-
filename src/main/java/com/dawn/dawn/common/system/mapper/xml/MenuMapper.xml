@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dawn.dawn.common.system.mapper.MenuMapper">
+    <sql id="selectSql">
+        SELECT
+        *
+        FROM
+        `sys_menu`
+        <where>
+            deleted=0
+            <if test="param.id!=null">
+                and id=#{param.id}
+            </if>
+            <if test="param.name!=null">
+                and name like concat("%",#{param.name},"%")
+            </if>
+            <if test="param.parentId!=null">
+                and parent_id=#{param.parentId}
+            </if>
+            <if test="param.path!=null">
+                and `path`=#{param.path}
+            </if>
+            <if test="param.isCache!=null">
+                and is_cache=#{param.isCache}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectListRel" resultType="com.dawn.dawn.common.system.entity.Menu">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="selectPageRel" resultType="com.dawn.dawn.common.system.entity.Menu">
+        <include refid="selectSql"/>
+    </select>
+
+
+    <select id="selectMenuByUserId" resultType="com.dawn.dawn.common.system.entity.Menu">
+        select DISTINCT m.id, m.*
+        from sys_menu m
+                 left join sys_role_menu rm on m.id = rm.menu_id
+                 left join sys_user_role ur on rm.role_id = ur.role_id
+                 left join sys_role ro on ur.role_id = ro.role_id
+        where ur.user_id = #{userId}
+        order by m.parent_id, m.sort
+    </select>
+
+    <select id="listMenuByRoleId" resultType="com.dawn.dawn.common.system.entity.Menu">
+        SELECT DISTINCT *
+        FROM sys_menu
+        WHERE id IN (
+            SELECT menu_id
+            FROM sys_role_menu
+            WHERE role_id = #{roleId}
+        )
+    </select>
+</mapper>

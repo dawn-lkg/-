@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dawn.dawn.common.system.mapper.RoleMapper">
+
+    <sql id="selectSql">
+        select *
+        from sys_role
+        <where>
+            deleted=0
+            <if test="param.roleId != null">
+                AND id = #{parma.roleId}
+            </if>
+            <if test="param.roleName != null">
+                AND role_name like concat("%",#{param.roleName},"%")
+            </if>
+            <if test="param.roleKey != null">
+                AND role_key = #{param.roleKey}
+            </if>
+            <if test="param.status!= null">
+                AND status=#{parma.status}
+            </if>
+        </where>
+    </sql>
+
+    <select id="listRoleByUserId" resultType="com.dawn.dawn.common.system.entity.Role">
+        SELECT *
+        FROM sys_role
+        WHERE role_id IN (SELECT role_id
+                          FROM sys_user_role
+                          WHERE user_id = #{userId})
+    </select>
+    <select id="listPage" resultType="com.dawn.dawn.common.system.entity.Role">
+        select * from sys_role
+        <where>
+            <if test="param.name!=null">
+                name like concat("%",${param.name},"%")
+            </if>
+            and deleted=0
+        </where>
+    </select>
+    <select id="selectPageRel" resultType="com.dawn.dawn.common.system.entity.Role">
+        <include refid="selectSql"></include>
+    </select>
+    <select id="selectListRel" resultType="com.dawn.dawn.common.system.entity.Role">
+        <include refid="selectSql"></include>
+    </select>
+</mapper>

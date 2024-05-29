@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dawn.dawn.common.system.mapper.OperationRecordMapper">
+    <select id="selectPageRel" resultType="com.dawn.dawn.common.system.vo.OperationRecordVo">
+        SELECT
+            a.*
+        FROM
+            `sys_operation_record` a
+        <where>
+            <if test="param.type!=null">
+                AND a.type=#{param.type}
+            </if>
+        </where>
+        order by a.create_time desc
+    </select>
+</mapper>
