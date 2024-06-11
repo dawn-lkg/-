@@ -31,7 +31,7 @@ public class UserController extends BaseController {
         return success(userService.pageRel(userParam));
     }
 
-    @OperationLog(module = "用户",operator = "查询用户信息")
+   // @OperationLog(module = "用户",operator = "查询用户信息")
     @GetMapping("info")
     public Result getUserInfo(){
         if(getLoginUser()==null){

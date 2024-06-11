@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/dawn
+    username: root
+    password: KYPiD7rnjzmmmDLs
+    driverClassName: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+  rabbitmq:
+    username: guest
+    password: guest
+    host: localhost
+    port: 5672
+    listener:
+      simple:
+        acknowledge-mode: manual
+    template:
+      mandatory: true
+    publisher-returns: true
+    publisher-confirm-type: correlated
+server:
+  port: 8282

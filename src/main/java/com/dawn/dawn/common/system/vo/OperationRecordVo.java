@@ -21,6 +21,8 @@ public class OperationRecordVo implements Serializable {
     private String id;
     //用户名
     private String username;
+    //用户名称
+    private String nickname;
     //操作耗时
     private Long time;
     //操作模块

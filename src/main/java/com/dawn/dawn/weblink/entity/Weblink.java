@@ -2,6 +2,8 @@ package com.dawn.dawn.weblink.entity;
 
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,6 +46,7 @@ public class Weblink extends Model<Weblink> {
     /**
      * 创建人
      */
+    @TableField(fill = FieldFill.INSERT)
     private String createBy;
     /**
      * 逻辑删除

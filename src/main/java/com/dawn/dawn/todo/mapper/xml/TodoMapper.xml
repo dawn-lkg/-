@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dawn.dawn.todo.mapper.TodoMapper">
+    <sql id="selectSql">
+        select
+            a.id,
+            a.name,
+            a.user_id,
+            a.description,
+            a.is_notify,
+            a.notify_time,
+            a.time,
+            a.create_time,
+            a.update_time,
+            a.create_by,
+            a.deleted
+
+        from todo a
+        <where>
+            a.deleted=0
+            <if test="param.id != null">
+                and a.id = #{param.id}
+            </if>
+            <if test="param.name != null and param.name != ''">
+                and a.name = #{param.name}
+            </if>
+            <if test="param.userId != null">
+                and a.user_id = #{param.userId}
+            </if>
+            <if test="param.description != null and param.description != ''">
+                and a.description = #{param.description}
+            </if>
+            <if test="param.isNotify != null">
+                and a.is_notify = #{param.isNotify}
+            </if>
+            <if test="param.notifyTime != null">
+                and a.notify_time = #{param.notifyTime}
+            </if>
+            <if test="param.time != null">
+                and DATE(a.time) = #{param.time}
+            </if>
+            <if test="param.createTime != null">
+                and a.create_time = #{param.createTime}
+            </if>
+            <if test="param.updateTime != null">
+                and a.update_time = #{param.updateTime}
+            </if>
+            <if test="param.createBy != null">
+                and a.create_by = #{param.createBy}
+            </if>
+            <if test="param.deleted != null">
+                and a.deleted = #{param.deleted}
+            </if>
+            <if test="param.createTimeStart!=null">
+                and a.create_time >= #{param.createTimeStart}
+            </if>
+            <if test="param.createTimeEnd!=null">
+                and a.create_time &lt;= #{param.createTimeEnd}
+            </if>
+            <if test="param.timeStart!=null">
+                and a.time >= #{param.timeStart}
+            </if>
+            <if test="param.timeEnd!=null">
+                and a.time &lt;= #{param.timeEnd}
+            </if>
+        </where>
+
+    </sql>
+
+   <select id="selectPageRel" resultType="com.dawn.dawn.todo.vo.TodoVO">
+        <include refid="selectSql"/>
+   </select>
+
+    <select id="selectListRel" resultType="com.dawn.dawn.todo.vo.TodoVO">
+        <include refid="selectSql"/>
+    </select>
+
+</mapper>
+

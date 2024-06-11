@@ -68,5 +68,11 @@ public class OperationRecordServiceImpl extends ServiceImpl<OperationRecordMappe
         operationRecord.setUrl("/login");
         saveAsync(operationRecord);
     }
+
+    @Override
+    public CommonPage<OperationRecordVo> listByModule(OperationRecordParam param) {
+        IPage<OperationRecordVo> operationRecordVoIPage = baseMapper.selectPageRel(new Page<>(param.getPageNum(), param.getPageSize()), param);
+        return CommonPage.restPage(operationRecordVoIPage);
+    }
 }
 

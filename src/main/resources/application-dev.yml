@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/dawn
+    username: root
+    password: 123456
+    driverClassName: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+  rabbitmq:
+    host: 120.27.215.0
+    port: 5672
+    username: mytest
+    password: test123
+    listener:
+      simple:
+        acknowledge-mode: manual
+    template:
+      mandatory: true
+    publisher-returns: true
+    publisher-confirm-type: correlated
+    connection-timeout: 3600

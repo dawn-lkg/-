@@ -28,6 +28,16 @@ public class SecurityUtils {
         }
     }
     /**
+     * 获取用户id
+     */
+    public static String getUserId(){
+        User user = getLoginUser();
+        if(user == null){
+            return "";
+        }
+        return user.getUserId();
+    }
+    /**
      * 获取Authentication
      */
     public static Authentication getAuthentication()

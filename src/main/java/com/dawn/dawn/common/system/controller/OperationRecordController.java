@@ -40,5 +40,11 @@ public class OperationRecordController extends BaseController {
         return  success(operationRecordVoCommonPage);
     }
 
+    @GetMapping("/record")
+    public Result<?> getRecord(OperationRecordParam param){
+        CommonPage<OperationRecordVo> operationRecordVoCommonPage = sysOperationRecordService.listByModule(param);
+        return success(operationRecordVoCommonPage);
+    }
+
 }
 

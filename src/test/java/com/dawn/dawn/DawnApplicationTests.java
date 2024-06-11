@@ -1,7 +1,8 @@
 package com.dawn.dawn;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.dawn.dawn.rabbitmq.config.RabbitMQConfig;
+import com.dawn.dawn.common.core.utils.EmailSender;
 import com.dawn.dawn.common.core.utils.CommonUtil;
 import com.dawn.dawn.common.system.entity.Menu;
 import com.dawn.dawn.common.system.entity.User;
@@ -11,15 +12,24 @@ import com.dawn.dawn.common.system.param.UserParam;
 import com.dawn.dawn.common.system.service.MenuService;
 import com.dawn.dawn.common.system.service.OperationRecordService;
 import com.dawn.dawn.common.system.service.UserService;
+import com.dawn.dawn.rabbitmq.constant.RabbitMqConstant;
+import com.dawn.dawn.todo.entity.Todo;
+import com.dawn.dawn.todo.param.TodoParam;
+import com.dawn.dawn.todo.service.TodoService;
 import com.wf.captcha.SpecCaptcha;
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.sql.*;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 @SpringBootTest
 class DawnApplicationTests {
@@ -37,7 +47,7 @@ class DawnApplicationTests {
     }
 
     @Test
-    void test(){
+    void test() {
         User user = new User();
         user.setUsername("admin");
         user.setNickname("����Ա");
@@ -48,7 +58,7 @@ class DawnApplicationTests {
     }
 
     @Test
-    void test1(){
+    void test1() {
         UserParam userParam = new UserParam();
         userParam.setPageNum(1);
         userParam.setPageSize(10);
@@ -56,24 +66,24 @@ class DawnApplicationTests {
     }
 
     @Test
-    void test2(){
+    void test2() {
 //        List<Menu> menus = menuService.listRel(new MenuParam());
 //        System.out.println(menus);
 //        menuService.buildMenus(menus,0L).forEach(d->{
 //            System.out.println(d);
 //        });
-       // System.out.println(menuService.buildMenus(menuService.selectMenuByUserId(1L), 0L));
+        // System.out.println(menuService.buildMenus(menuService.selectMenuByUserId(1L), 0L));
         System.out.println(menuService.list());
     }
 
     @Test
-    void test3(){
+    void test3() {
         System.out.println(userService.list(new LambdaQueryWrapper<>(User.class).eq(User::getUsername, "admin")));
-       // System.out.println(userService.list());
+        // System.out.println(userService.list());
     }
 
     @Test
-    void test4(){
+    void test4() {
         List<Menu> menus = menuService.listRel(new MenuParam());
         System.out.println(menus);
         System.out.println(menuService.buildMenus(menus, "0"));
@@ -81,7 +91,7 @@ class DawnApplicationTests {
     }
 
     @Test
-    void test5(){
+    void test5() {
         SpecCaptcha specCaptcha = new SpecCaptcha(150, 45, 4);
         System.out.println(specCaptcha.toBase64());
         //System.out.println(specCaptcha.text().toLowerCase());
@@ -89,7 +99,7 @@ class DawnApplicationTests {
     }
 
     @Test
-    void test6(){
+    void test6() {
         System.out.println(CommonUtil.generateCaptchaText(6));
     }
 
@@ -97,27 +107,221 @@ class DawnApplicationTests {
     private OperationRecordService operationRecordService;
 
     @Test
-    void test7(){
+    void test7() {
         OperationRecordParam operationRecordParam = new OperationRecordParam();
-       // operationRecordParam.setType("1");
+        // operationRecordParam.setType("1");
         System.out.println(operationRecordService.listPageRel(operationRecordParam));
     }
+
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
     @Test
-    public void test8(){
+    public void test8() {
         User user = new User();
         user.setUsername("admin");
         user.setNickname("管理员");
         user.setPassword(passwordEncoder.encode("admin"));
         user.setEmail("2360187899@qq.com");
         user.setPhonenumber("18827574648");
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "routing.key.test", user);
+        //rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "routing.key.test", user);
     }
 
-    @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME)
+    //RabbitListener(queues = RabbitMQConfig.QUEUE_NAME)
     public void receiveMessage(String message) {
         System.out.println("Received message: " + message);
+    }
+
+
+    public static int ticket = 10000;
+
+    private ReentrantLock reentrantLock = new ReentrantLock();
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/dawn";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "123456";
+
+    @Test
+    public void test9() throws SQLException {
+        long start = System.currentTimeMillis();
+        CountDownLatch countDownLatch = new CountDownLatch(100);
+        for (int i = 0; i < 200; i++) {
+
+            Thread thread = new Thread(() -> {
+//                synchronized (this){
+                reentrantLock.lock();
+                try {
+                    processTicket();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    reentrantLock.unlock();
+                    countDownLatch.countDown();
+                }
+//                }
+            });
+            thread.start();
+        }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        //System.out.println("结果："+ticket);
+        long end = System.currentTimeMillis();
+        System.out.println((end - start));
+
+    }
+
+    private void processTicket() throws SQLException {
+        Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+
+        try {
+            connection.setAutoCommit(false);
+
+            // 悲观锁
+            String selectForUpdateSql = "SELECT ticket FROM test WHERE id = 1";
+            PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSql);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                int remainingTickets = resultSet.getInt("ticket");
+
+                if (remainingTickets > 0) {
+                    String updateSql = "UPDATE test SET ticket = ticket - 1 WHERE id = 1";
+                    PreparedStatement updateStatement = connection.prepareStatement(updateSql);
+                    updateStatement.executeUpdate();
+                    System.out.println("Ticket sold, remaining: " + (remainingTickets - 1));
+                } else {
+                    System.out.println("No tickets remaining");
+                }
+            }
+
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.close();
+        }
+    }
+
+    @Test
+    public void test10() throws InterruptedException {
+        Thread thread1 = new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("t1执行");
+        });
+        Thread thread2 = new Thread(() -> {
+            System.out.println("t2执行");
+        });
+        Thread thread3 = new Thread(() -> {
+            System.out.println("t3执行");
+        });
+        thread1.start();
+        thread1.join();
+        thread2.start();
+        thread2.join();
+        thread3.start();
+        thread3.join();
+    }
+
+    @Test
+    public void test11() throws InterruptedException {
+            CountDownLatch latch = new CountDownLatch(3); // 需要减少的计数器数量
+
+            Thread t1 = new Thread(() -> {
+                try {
+                    System.out.println("T1 start");
+                    // 模拟耗时操作
+                    Thread.sleep(1000);
+                    System.out.println("T1 end");
+                    latch.countDown(); // 计数器减1
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            Thread t2 = new Thread(() -> {
+                try {
+                    //latch.await(); // 等待计数器减到0
+                    System.out.println("T2 start");
+                    // 模拟耗时操作
+                    Thread.sleep(1000);
+                    System.out.println("T2 end");
+                    latch.countDown(); // 计数器减1
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            Thread t3 = new Thread(() -> {
+                try {
+                    latch.await(); // 等待计数器减到0
+                    System.out.println("T3 start");
+                    // 模拟耗时操作
+                    Thread.sleep(1000);
+                    System.out.println("T3 end");
+                    latch.countDown(); // 计数器减1
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            t1.start();
+            t2.start();
+            t3.start();
+
+    }
+
+    @Autowired
+    EmailSender emailSender;
+
+    @Test
+    public void test12(){
+        emailSender.sendEmail("2360187899@qq.com","标题","<h1>测试标题</h1>");
+    }
+
+    @Test
+    public void test13(){
+        Todo todo = new Todo();
+        todo.setId("1");
+        todo.setName("测试");
+        todo.setUserId("1");
+        todo.setNotifyTime(new Date());
+        todo.setDescription("发送时间："+ DateUtil.date().toTimeStr());
+        rabbitTemplate.convertAndSend(RabbitMqConstant.MAIL_MESSAGE_EXCHANGE, RabbitMqConstant.MAIL_MESSAGE_ROUTING_KEY,
+                todo, message -> {
+                    //设置消息持久化
+                    MessageProperties props = message.getMessageProperties();
+                    props.setHeader("x-delay", 600000);
+                    props.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+                    props.setExpiration(String.valueOf(6000));
+                    return message;
+                });
+    }
+
+    @Autowired
+    TodoService todoService;
+
+    @Test
+    public void test14(){
+        TodoParam todoParam = new TodoParam();
+        todoParam.setTimeStart("2024-06-01 ");
+        todoParam.setTimeEnd("2024-06-02");
+        System.out.println(todoService.listRel(todoParam));
+
+    }
+
+    @Test
+    public void test15(){
+        // 创建两个日期实例
+        Date date1 = DateUtil.parse("2023-01-01 08:00:00");
+        Date date2 = DateUtil.parse("2023-01-01 08:01:00");
+        System.out.println(DateUtil.betweenMs(date2, date1));
     }
 }
