@@ -22,3 +22,6 @@ spring:
     publisher-returns: true
     publisher-confirm-type: correlated
     connection-timeout: 3600
+
+ip:
+  xdbPath: D:\project\project\dawn\src\main\resources\static\ip\csdn-ip2region.xdb

@@ -15,6 +15,7 @@ import com.dawn.dawn.common.system.service.UserService;
 import com.dawn.dawn.common.system.vo.OperationRecordVo;
 import eu.bitwalker.useragentutils.UserAgent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -31,6 +32,8 @@ public class OperationRecordServiceImpl extends ServiceImpl<OperationRecordMappe
 
     @Autowired
     private UserService userService;
+    @Value("${ip.xdbPath}")
+    private String xdbPath;
 
     @Async
     @Override
@@ -56,6 +59,7 @@ public class OperationRecordServiceImpl extends ServiceImpl<OperationRecordMappe
         OperationRecord operationRecord = new OperationRecord();
         operationRecord.setBrowser(browser);
         operationRecord.setIp(ip);
+        operationRecord.setIpAddress(IpUtils.getCityInfoByVectorIndex(ip,xdbPath));
         operationRecord.setRequestMethod(Constants.REQUEST_TYPE_POST);
         operationRecord.setOs(osName);
         operationRecord.setTime(0L);

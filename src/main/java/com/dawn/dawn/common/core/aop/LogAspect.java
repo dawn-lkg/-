@@ -6,6 +6,7 @@ import cn.hutool.http.useragent.UserAgentUtil;
 import com.alibaba.fastjson.JSON;
 import com.dawn.dawn.common.core.constant.Constants;
 import com.dawn.dawn.common.core.utils.HttpContextUtils;
+import com.dawn.dawn.common.core.utils.IpUtils;
 import com.dawn.dawn.common.system.entity.OperationRecord;
 import com.dawn.dawn.common.system.entity.User;
 import com.dawn.dawn.common.system.service.OperationRecordService;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -31,6 +33,9 @@ import java.util.Objects;
 @Component
 @Aspect
 public class LogAspect {
+
+    @Value("${ip.xdbPath}")
+    private String xdbPath;
 
     @Resource
     private OperationRecordService operationRecordService;
@@ -102,12 +107,14 @@ public class LogAspect {
         //记录请求地址、请求方式、ip
         HttpServletRequest request= HttpContextUtils.getHttpServletRequest();
         if(Objects.nonNull(request)){
+            String clientIP = ServletUtil.getClientIP(request);
             operationRecord.setUrl(request.getRequestURI());
             operationRecord.setRequestMethod(request.getMethod());
             UserAgent ua= UserAgentUtil.parse(ServletUtil.getHeaderIgnoreCase(request,"User-Agent"));
             operationRecord.setOs(ua.getPlatform().toString());
             operationRecord.setBrowser(ua.getBrowser().toString());
-            operationRecord.setIp(ServletUtil.getClientIP(request));
+            operationRecord.setIp(clientIP);
+            operationRecord.setIpAddress(IpUtils.getCityInfoByVectorIndex(clientIP,xdbPath));
         }
         //记录异常
         if(Objects.nonNull(e)){

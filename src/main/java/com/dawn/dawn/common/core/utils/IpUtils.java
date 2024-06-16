@@ -1,6 +1,10 @@
 package com.dawn.dawn.common.core.utils;
 
 import cn.hutool.core.util.StrUtil;
+import com.dawn.dawn.common.core.exception.BusinessException;
+import lombok.extern.slf4j.Slf4j;
+import org.lionsoul.ip2region.xdb.Searcher;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -8,12 +12,17 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author chenliming
  * @date 2023/11/16 23:21
  */
+@Slf4j
+@Component
 public class IpUtils {
     public final static String REGX_0_255 = "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)";
     // 匹配 ip
@@ -46,24 +55,24 @@ public class IpUtils {
             return "unknown";
         }
         String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
         {
             ip = request.getHeader("Proxy-Client-IP");
         }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
         {
             ip = request.getHeader("X-Forwarded-For");
         }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
         {
             ip = request.getHeader("WL-Proxy-Client-IP");
         }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
         {
             ip = request.getHeader("X-Real-IP");
         }
 
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
         {
             ip = request.getRemoteAddr();
         }
@@ -116,10 +125,8 @@ public class IpUtils {
                     return true;
                 }
             case SECTION_5:
-                switch (b1)
-                {
-                    case SECTION_6:
-                        return true;
+                if (b1 == SECTION_6) {
+                    return true;
                 }
             default:
                 return false;
@@ -134,7 +141,7 @@ public class IpUtils {
      */
     public static byte[] textToNumericFormatV4(String text)
     {
-        if (text.length() == 0)
+        if (text.isEmpty())
         {
             return null;
         }
@@ -225,7 +232,7 @@ public class IpUtils {
         {
             return InetAddress.getLocalHost().getHostAddress();
         }
-        catch (UnknownHostException e)
+        catch (UnknownHostException ignored)
         {
         }
         return "127.0.0.1";
@@ -242,7 +249,7 @@ public class IpUtils {
         {
             return InetAddress.getLocalHost().getHostName();
         }
-        catch (UnknownHostException e)
+        catch (UnknownHostException ignored)
         {
         }
         return "未知";
@@ -262,7 +269,7 @@ public class IpUtils {
             final String[] ips = ip.trim().split(",");
             for (String subIp : ips)
             {
-                if (false == isUnknown(subIp))
+                if (!isUnknown(subIp))
                 {
                     ip = subIp;
                     break;
@@ -307,7 +314,7 @@ public class IpUtils {
         String[] s1 = ipWildCard.split("\\.");
         String[] s2 = ip.split("\\.");
         boolean isMatchedSeg = true;
-        for (int i = 0; i < s1.length && !s1[i].equals("*"); i++)
+        for (int i = 0; i < s1.length && !"*".equals(s1[i]); i++)
         {
             if (!s1[i].equals(s2[i]))
             {
@@ -382,4 +389,53 @@ public class IpUtils {
         }
         return false;
     }
+    /**
+     * 方法二：缓存 VectorIndex 索引，对用户ip地址进行转换
+     * 注：每个线程需要单独创建一个独立的 Searcher 对象，但是都共享全局变量 vIndex 缓存。
+     */
+    public static String getCityInfoByVectorIndex(String ip,String xdbPath) {
+        if (StrUtil.isNotEmpty(ip)) {
+            try {
+                // 检查是否为本地IP
+                if (isLocalIp(ip)) {
+                    return "本地";
+                }
+                // 1、从 XDB_PATH 中预先加载 VectorIndex 缓存，并且作为全局变量，后续反复使用。
+                byte[] vIndex = Searcher.loadVectorIndexFromFile(xdbPath);
+                // 2、使用全局的 vIndex 创建带 VectorIndex 缓存的查询对象。
+                Searcher searcher = Searcher.newWithVectorIndex(xdbPath, vIndex);
+                // 3、查询
+                long sTime = System.nanoTime();
+                String region = searcher.search(ip);
+                long cost = TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - sTime);
+                region = region.replace("|0", "");
+                log.info("{地区: {}, IO操作数: {}, 耗时: {} μs}", region, searcher.getIOCount(), cost);
+                return region;
+            } catch (Exception e) {
+                log.error("获取IP地址异常：{} ", e.getMessage());
+                throw new BusinessException("获取IP地址异常");
+            }
+        }
+        return "未知";
+    }
+
+    // 辅助方法，检查是否为本地IP
+    private static boolean isLocalIp(String ip) {
+        // 定义常见的本地IP地址
+        List<String> localIps = Arrays.asList("127.0.0.1", "0:0:0:0:0:0:0:1", "localhost");
+        if (localIps.contains(ip)) {
+            return true;
+        }
+        // 检查是否为局域网IP地址
+        try {
+            InetAddress inetAddress = InetAddress.getByName(ip);
+            if (inetAddress.isSiteLocalAddress()) {
+                return true;
+            }
+        } catch (UnknownHostException e) {
+            log.error("无法解析IP地址：{} ", e.getMessage());
+        }
+        return false;
+    }
+
 }

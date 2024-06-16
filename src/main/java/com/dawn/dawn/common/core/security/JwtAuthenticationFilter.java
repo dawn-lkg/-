@@ -24,8 +24,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -51,9 +49,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 User user;
                 user =redisCache.getCacheObject(RedisConstants.LOGINUSER + userId);
                 if(Objects.isNull(user)){
-                    user= userService.getById(userId);
-                    List<String> menuTypeList = new ArrayList<>();
-                    menuTypeList.add(Constants.MENU_TYPE_PERMISSION);
+                    Result<Object> objectResult = new Result<>(Constants.RESULT_NOT_LOGUIN,Constants.RESULT_ERROR_MSG);
+                    WebUtils.renderString(response, JSONUtil.toJSONString(objectResult));
+                    return;
+//                    user= userService.getById(userId);
+//                    List<String> menuTypeList = new ArrayList<>();
+//                    menuTypeList.add(Constants.MENU_TYPE_PERMISSION);
 //                    List<Menu> authorities = menuService.listMenuByUserId(userId, menuTypeList);
 //                    user.set(authorities);
                 }

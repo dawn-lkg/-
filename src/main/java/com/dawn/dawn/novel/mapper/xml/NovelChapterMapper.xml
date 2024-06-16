@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dawn.dawn.novel.mapper.NovelChapterMapper">
+    <sql id="selectSql">
+        select
+            a.id,
+            a.novel_id,
+            a.title,
+            a.number
+
+        from novel_chapter a
+        <where>
+            <if test="param.id != null">
+                and a.id = #{param.id}
+            </if>
+            <if test="param.novelId != null">
+                and a.novel_id = #{param.novelId}
+            </if>
+            <if test="param.title != null and param.title != ''">
+                and a.title = #{param.title}
+            </if>
+            <if test="param.number != null">
+                and a.number = #{param.number}
+            </if>
+            <if test="param.content != null and param.content != ''">
+                and a.content = #{param.content}
+            </if>
+        </where>
+    </sql>
+
+   <select id="selectPageRel" resultType="com.dawn.dawn.novel.vo.NovelChapterVO">
+        <include refid="selectSql"/>
+   </select>
+
+    <select id="selectListRel" resultType="com.dawn.dawn.novel.vo.NovelChapterVO">
+        <include refid="selectSql"/>
+    </select>
+
+</mapper>
+

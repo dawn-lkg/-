@@ -10,7 +10,10 @@ public class RedisConstants {
      * 登录用户
      */
     public static final String LOGINUSER="LOGINUSER-";
-
+    /**
+     * 登录过期时间
+     */
+    public static final int LOGIN_EXPIRED=30;
     /**
      * 验证码
      */

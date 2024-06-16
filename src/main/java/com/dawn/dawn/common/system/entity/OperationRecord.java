@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
@@ -14,7 +15,9 @@ import java.util.Date;
  * @author clm
  * @since 2023-10-18 22:07:06
  */
+
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_operation_record")
 public class OperationRecord extends Model<OperationRecord> {
     /**
@@ -77,7 +80,10 @@ public class OperationRecord extends Model<OperationRecord> {
      * IP地址
      */
     private String ip;
-
+    /**
+     * ip归属地
+     */
+    private String ipAddress;
     /**
      * 状态，0表示成功，1表示异常
      */

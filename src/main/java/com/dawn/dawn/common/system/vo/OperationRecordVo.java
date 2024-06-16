@@ -41,6 +41,8 @@ public class OperationRecordVo implements Serializable {
     private String browser;
     //ip地址
     private String ip;
+    //ip归属地
+    private String ipAddress;
     //状态 0成功 1异常
     private String status;
     //创建时间

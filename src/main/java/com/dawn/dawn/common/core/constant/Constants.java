@@ -181,4 +181,6 @@ public class Constants {
 
     /** InnerLink组件标识 */
     public final static String INNER_LINK = "InnerLink";
+
+    public static final String LIMITONESQL = "limit 1";
 }

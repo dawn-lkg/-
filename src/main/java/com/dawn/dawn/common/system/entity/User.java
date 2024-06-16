@@ -68,6 +68,22 @@ public class User implements UserDetails {
     @TableLogic
     private Integer deleted;
 
+    /**
+     * 操作系统
+     */
+    @TableField(exist = false)
+    private String os;
+    /**
+     * 浏览器
+     */
+    @TableField(exist = false)
+    private String browser;
+    /**
+     * 登录信息
+     */
+    @TableField(exist = false)
+    private String ipAddress;
+
     @TableField(exist = false)
     private List<Role> roles;
 
