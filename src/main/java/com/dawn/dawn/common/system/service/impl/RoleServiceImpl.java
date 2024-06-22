@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dawn.dawn.common.core.constant.Constants;
 import com.dawn.dawn.common.core.exception.BusinessException;
 import com.dawn.dawn.common.core.web.CommonPage;
 import com.dawn.dawn.common.system.entity.Menu;
@@ -88,6 +89,11 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         if(!removeById(roleId)){
             throw new BusinessException("删除失败");
         }
+    }
+
+    @Override
+    public Role getRoleByRoleKey(String roleKey) {
+        return lambdaQuery().eq(Role::getRoleKey, roleKey).last(Constants.LIMITONESQL).one();
     }
 }
 

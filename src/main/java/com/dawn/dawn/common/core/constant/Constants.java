@@ -183,4 +183,8 @@ public class Constants {
     public final static String INNER_LINK = "InnerLink";
 
     public static final String LIMITONESQL = "limit 1";
+    /** 默认角色标识 */
+    public static final String DEFAULT_ROLE_KEY="visitor";
+    /** 默认密码 */
+    public static final String DEFAULT_PASSWORD_VALUE="123456";
 }

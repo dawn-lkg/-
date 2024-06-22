@@ -44,7 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/login","/captcha","/file/***").permitAll()
+                .antMatchers("/login","/captcha","/files/***","/login-github").permitAll()
                 .antMatchers().permitAll()
                 .anyRequest().authenticated()
                 .and()

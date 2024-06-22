@@ -22,7 +22,6 @@ public class BaseController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null) {
                 Object object = authentication.getPrincipal();
-                System.out.println("User:"+object);
                 if (object instanceof User) {
                     return (User) object;
                 }

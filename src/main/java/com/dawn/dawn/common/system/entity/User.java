@@ -46,6 +46,8 @@ public class User implements UserDetails {
     private String avatar;
     //性别 0男 1女 2未知
     private String sex;
+    //github主键
+    private Long githubId;
     //账号状态 0正常 1停用
     private String status;
     //最后登录ip

@@ -67,4 +67,12 @@ public class MainController extends BaseController {
         CaptchaVo captchaVo = new CaptchaVo(base64,key);
         return success(captchaVo);
     }
+
+    @PostMapping("/login-github")
+    public Result<?> loginGithub(@RequestBody String code){
+        String jwt = loginService.loginGithub(code);
+        AccessTokenEntity accessTokenEntity = new AccessTokenEntity();
+        accessTokenEntity.setToken(jwt);
+        return success(accessTokenEntity);
+    }
 }

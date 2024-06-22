@@ -72,4 +72,20 @@ public class CommonUtil {
         }
         return sb.toString();
     }
+
+    /**
+     * 生成带有随机字符后缀的游客名称
+     * @return 随机游客名称
+     */
+    public static String generateVisitorNameUsingRandomChars() {
+        String BASE_NAME="游客";
+        int length = 5; // 随机字符的长度
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder suffix = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            suffix.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return BASE_NAME + "_" + suffix.toString();
+    }
 }

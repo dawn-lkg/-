@@ -5,9 +5,11 @@ import com.dawn.dawn.common.core.exception.BusinessException;
 import com.dawn.dawn.common.core.web.BaseController;
 import com.dawn.dawn.common.core.web.Result;
 import com.dawn.dawn.common.system.dto.UserDto;
+import com.dawn.dawn.common.system.dto.UserPasswordDto;
 import com.dawn.dawn.common.system.param.UserParam;
 import com.dawn.dawn.common.system.service.UserService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 
@@ -59,6 +61,27 @@ public class UserController extends BaseController {
     public Result<?> remove(@PathVariable String id){
         userService.deleteUser(id);
         return success("删除成功");
+    }
+
+    @OperationLog(module = "用户",operator = "修改头像")
+    @PostMapping("/avatar")
+    public Result<?> updateAvatar(MultipartFile file){
+        String avatar = userService.updateAvatar(file);
+        return success(avatar);
+    }
+
+    @OperationLog(module = "用户",operator = "修改用户信息")
+    @PostMapping("/update-userInfo")
+    public Result<?> updateUserInfo(@RequestBody UserDto dto){
+        userService.updateUserInfo(dto);
+        return success("修改成功");
+    }
+
+    @OperationLog(module = "用户",operator = "修改密码")
+    @PostMapping("/update-password")
+    public Result<?> updatePassword(@RequestBody UserPasswordDto dto){
+        userService.updatePassword(dto);
+        return success("修改成功");
     }
 }
 

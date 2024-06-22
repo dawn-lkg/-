@@ -25,4 +25,8 @@ public interface LoginService {
      * 登出
      */
     void logout();
+    /**
+     * github登录
+     */
+    String loginGithub(String code);
 }

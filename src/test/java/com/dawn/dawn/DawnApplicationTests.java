@@ -1,9 +1,14 @@
 package com.dawn.dawn;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.http.Header;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dawn.dawn.common.core.utils.EmailSender;
 import com.dawn.dawn.common.core.utils.CommonUtil;
+import com.dawn.dawn.common.core.utils.IpUtils;
 import com.dawn.dawn.common.system.entity.Menu;
 import com.dawn.dawn.common.system.entity.User;
 import com.dawn.dawn.common.system.param.MenuParam;
@@ -12,13 +17,17 @@ import com.dawn.dawn.common.system.param.UserParam;
 import com.dawn.dawn.common.system.service.MenuService;
 import com.dawn.dawn.common.system.service.OperationRecordService;
 import com.dawn.dawn.common.system.service.UserService;
+import com.dawn.dawn.common.system.service.impl.GitHubOAuthService;
+import com.dawn.dawn.novel.entity.NovelChapter;
+import com.dawn.dawn.novel.param.NovelChapterParam;
+import com.dawn.dawn.novel.service.NovelChapterService;
+import com.dawn.dawn.novel.service.NovelService;
 import com.dawn.dawn.rabbitmq.constant.RabbitMqConstant;
 import com.dawn.dawn.todo.entity.Todo;
 import com.dawn.dawn.todo.param.TodoParam;
 import com.dawn.dawn.todo.service.TodoService;
 import com.wf.captcha.SpecCaptcha;
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +35,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.*;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -298,9 +307,9 @@ class DawnApplicationTests {
                 todo, message -> {
                     //设置消息持久化
                     MessageProperties props = message.getMessageProperties();
-                    props.setHeader("x-delay", 600000);
-                    props.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
-                    props.setExpiration(String.valueOf(6000));
+                    props.setHeader("x-delay", 30000);
+//                    props.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+//                    props.setExpiration(String.valueOf(6000));
                     return message;
                 });
     }
@@ -323,5 +332,67 @@ class DawnApplicationTests {
         Date date1 = DateUtil.parse("2023-01-01 08:00:00");
         Date date2 = DateUtil.parse("2023-01-01 08:01:00");
         System.out.println(DateUtil.betweenMs(date2, date1));
+    }
+
+    @Autowired
+    private NovelService novelService;
+    @Autowired
+    private NovelChapterService novelChapterService;
+
+    @Test
+    public void test16(){
+        List<NovelChapter> list = novelChapterService.list();
+        for (NovelChapter novelChapter : list) {
+            System.out.println(novelChapter);
+        }
+    }
+
+    @Test
+    public void test17(){
+        NovelChapterParam novelChapterParam = new NovelChapterParam();
+        novelChapterParam.setNovelId(3);
+        novelChapterParam.setNumber(4);
+        System.out.println(novelChapterService.previousChapterContent(novelChapterParam));
+    }
+
+    @Autowired
+    private IpUtils ipUtils;
+
+    @Test
+    public void test18(){
+        System.out.println(ipUtils.getCityInfoByVectorIndex("117.152.89.247","D:\\project\\project\\dawn\\src\\main\\resources\\static\\ip\\csdn-ip2region.xdb"));
+    }
+
+    @Test
+    public void test19(){
+        Map<String, Object> data = new HashMap<>();
+        data.put("client_id", "Ov23liT1TPjwEDKfRrOO");
+        data.put("client_secret", "0b16bb9973f5cb973a658e543474e696991d6e90");
+        data.put("code", "3e00031e59f13e1612bc");
+        //        使用HttpUtil发送post请求
+        String post = HttpRequest.post("https://github.com/login/oauth/access_token")
+                .header(Header.ACCEPT, "application/json")
+                .body(JSONUtil.toJsonStr(data))
+                .execute().body();
+        System.out.println(JSONObject.parseObject(post));
+        String accessToken = JSONObject.parseObject(post).getString("access_token");
+        String tokenType=JSONObject.parseObject(post).getString("token_type");
+        String user=HttpRequest.get("https://api.github.com/user")
+                .header("Authorization", "token "+accessToken)
+                .execute().body();
+        System.out.println(JSONObject.parseObject(user));
+    }
+
+    @Autowired
+    private GitHubOAuthService gitHubOAuthService;
+
+    @Test
+    public void test20(){
+        String body = HttpRequest.get("https://github.com/login/oauth/authorize?client_id=Ov23li09raH4jFrLkpMY&redirect_uri=http://120.27.215.0:8283/callback&scope=user:email").execute().body();
+        System.out.println(body);
+//        JSONObject gitHubAccessToken = gitHubOAuthService.getGitHubAccessToken("4bae333126f24ac4f440");
+//        String accessToken = gitHubAccessToken.getString("access_token");
+//        System.out.println(gitHubOAuthService.getGitHubUser(accessToken));
+
     }
 }

@@ -55,5 +55,12 @@ public interface RoleService extends IService<Role> {
      */
     void deleteRole(String roleId);
 
+    /**
+     * 根绝角色标识查询角色
+     * @param roleKey 角色标识
+     * @return Role
+     */
+    Role getRoleByRoleKey(String roleKey);
+
 }
 

@@ -21,8 +21,18 @@ spring:
       mandatory: true
     publisher-returns: true
     publisher-confirm-type: correlated
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Ov23li09raH4jFrLkpMY
+            client-secret: a360b56c87bffbbb36454f41d14948f442532e76
 server:
   port: 8282
 
 ip:
   xdbPath: /data/csdn-ip2region.xdb
+file:
+  url: http://120.27.215.0
+  path: /files

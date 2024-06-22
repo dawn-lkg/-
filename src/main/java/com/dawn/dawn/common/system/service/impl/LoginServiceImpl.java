@@ -1,6 +1,7 @@
 package com.dawn.dawn.common.system.service.impl;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.dawn.dawn.common.core.constant.Constants;
 import com.dawn.dawn.common.core.constant.RedisConstants;
 import com.dawn.dawn.common.core.exception.BusinessException;
@@ -9,6 +10,7 @@ import com.dawn.dawn.common.core.utils.JwtUtil;
 import com.dawn.dawn.common.core.utils.RedisCache;
 import com.dawn.dawn.common.core.utils.SecurityUtils;
 import com.dawn.dawn.common.system.dto.LoginDto;
+import com.dawn.dawn.common.system.entity.GitHubUser;
 import com.dawn.dawn.common.system.entity.Menu;
 import com.dawn.dawn.common.system.entity.Role;
 import com.dawn.dawn.common.system.entity.User;
@@ -46,6 +48,9 @@ public class LoginServiceImpl implements LoginService {
     private RoleService roleService;
     @Autowired
     private MenuService menuService;
+    @Autowired
+    private GitHubOAuthService gitHubOAuthService;
+
     @Override
     public String login(LoginDto loginDto) {
         User user = userService.getUserByUsername(loginDto.getUsername());
@@ -130,5 +135,30 @@ public class LoginServiceImpl implements LoginService {
             redisCache.deleteObject(key);
         }
 
+    }
+
+    @Override
+    public String loginGithub(String code) {
+        //查询accsee_toke
+        JSONObject gitHubAccessToken = gitHubOAuthService.getGitHubAccessToken(code);
+        //查询用户信息
+        GitHubUser gitHubUser = gitHubOAuthService.getGitHubUser(gitHubAccessToken.getString("access_token"));
+        //查询用户
+        User user = userService.getUserByGithubId(gitHubUser.getId());
+        if(Objects.isNull(user)){
+            user=userService.saveUser(gitHubUser);
+        }
+        //设置角色
+        setRoles(user);
+        //设置权限
+        setAuthorities(user);
+        //设置操作信息
+        setOperation(user);
+        //保存到缓存
+        redisCache.setCacheObject(RedisConstants.LOGINUSER+user.getUserId(),user,RedisConstants.LOGIN_EXPIRED, TimeUnit.MINUTES);
+        //生成凭证
+        String jwt= JwtUtil.createJWT(String.valueOf(user.getUserId()));
+        operationRecordService.recordLogin(user.getUsername(), Constants.SYSTEM_RECORD_SUCCESS,"github登录",this.getClass().getName());
+        return jwt;
     }
 }

@@ -22,6 +22,18 @@ spring:
     publisher-returns: true
     publisher-confirm-type: correlated
     connection-timeout: 3600
-
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Ov23liT1TPjwEDKfRrOO
+            client-secret: 0b16bb9973f5cb973a658e543474e696991d6e90
 ip:
   xdbPath: D:\project\project\dawn\src\main\resources\static\ip\csdn-ip2region.xdb
+upload:
+  path: E:/path/file/
+  chunk: E:/path/chunk/
+file:
+  url: http://localhost
+  path: /files

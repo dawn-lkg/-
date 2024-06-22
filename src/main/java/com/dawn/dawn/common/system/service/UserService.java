@@ -3,9 +3,12 @@ package com.dawn.dawn.common.system.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dawn.dawn.common.core.web.CommonPage;
 import com.dawn.dawn.common.system.dto.UserDto;
+import com.dawn.dawn.common.system.dto.UserPasswordDto;
+import com.dawn.dawn.common.system.entity.GitHubUser;
 import com.dawn.dawn.common.system.entity.User;
 import com.dawn.dawn.common.system.entity.UserInfo;
 import com.dawn.dawn.common.system.param.UserParam;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * (User)表服务接口
@@ -61,5 +64,37 @@ public interface UserService extends IService<User> {
      */
     void isExitUsername(String username,String userId);
 
+    /**
+     * 根据githubid查询用户
+     * @param githubId githubid
+     * @return User
+     */
+    User getUserByGithubId(Long githubId);
+
+    /**
+     * 保存github用户
+     * @param gitHubUser github用户
+     * @return User
+     */
+    User saveUser(GitHubUser gitHubUser);
+
+    /**
+     *
+     * @param file 文件
+     * @return String
+     */
+    String updateAvatar(MultipartFile file);
+
+    /**
+     * 修改用户信息
+     * @param dto 用户信息
+     */
+    void updateUserInfo(UserDto dto);
+
+    /**
+     * 修改密码
+     * @param userPasswordDto 密码dto
+     */
+    void updatePassword(UserPasswordDto userPasswordDto);
 }
 

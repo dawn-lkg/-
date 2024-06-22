@@ -6,15 +6,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dawn.dawn.common.core.constant.Constants;
 import com.dawn.dawn.common.core.exception.BusinessException;
+import com.dawn.dawn.common.core.utils.CommonUtil;
 import com.dawn.dawn.common.core.utils.SecurityUtils;
 import com.dawn.dawn.common.core.web.CommonPage;
 import com.dawn.dawn.common.system.dto.UserDto;
-import com.dawn.dawn.common.system.entity.Role;
-import com.dawn.dawn.common.system.entity.UserInfo;
-import com.dawn.dawn.common.system.entity.UserRole;
+import com.dawn.dawn.common.system.dto.UserPasswordDto;
+import com.dawn.dawn.common.system.entity.*;
 import com.dawn.dawn.common.system.mapper.UserMapper;
-import com.dawn.dawn.common.system.entity.User;
 import com.dawn.dawn.common.system.param.UserParam;
+import com.dawn.dawn.common.system.service.FileService;
 import com.dawn.dawn.common.system.service.RoleService;
 import com.dawn.dawn.common.system.service.UserRoleService;
 import com.dawn.dawn.common.system.service.UserService;
@@ -23,6 +23,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserRoleService userRoleService;
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private FileService fileService;
 
     @Override
     public CommonPage<?> pageRel(UserParam param) {
@@ -149,5 +152,88 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException("当前用户已经存在");
         }
     }
+
+    @Override
+    public User getUserByGithubId(Long githubId) {
+        return lambdaQuery().eq(User::getGithubId, githubId).last(Constants.LIMITONESQL).one();
+    }
+
+    @Override
+    public User saveUser(GitHubUser gitHubUser) {
+        //创建用户
+        User user = new User();
+        user.setGithubId(gitHubUser.getId());
+        user.setAvatar(gitHubUser.getAvatarUrl());
+        user.setUsername(gengerUserName(gitHubUser.getLogin()));
+        user.setNickname(CommonUtil.generateVisitorNameUsingRandomChars());
+        user.setPassword(SecurityUtils.encryptPassword(Constants.DEFAULT_PASSWORD_VALUE));
+        //保存用户
+        if(!save(user)){
+            throw new BusinessException("保存用户失败");
+        }
+        //保存角色
+        Role role = roleService.getRoleByRoleKey(Constants.DEFAULT_ROLE_KEY);
+        UserRole userRole = new UserRole();
+        userRole.setUserId(user.getUserId());
+        userRole.setRoleId(role.getRoleId());
+        userRoleService.save(userRole);
+        return user;
+    }
+
+    @Override
+    public String updateAvatar(MultipartFile file) {
+        //文件上传
+        String avatar = fileService.uploadFile(file);
+        //修改头像
+        boolean update = lambdaUpdate().eq(User::getUserId, SecurityUtils.getUserId()).set(User::getAvatar, avatar).update();
+        if(!update){
+            throw new BusinessException("修改头像失败");
+        }
+        return avatar;
+    }
+
+    @Override
+    public void updateUserInfo(UserDto dto) {
+        boolean update = lambdaUpdate().eq(User::getUserId, SecurityUtils.getUserId())
+                .set(User::getNickname, dto.getNickname())
+                .set(User::getPhonenumber, dto.getPhonenumber())
+                .set(User::getEmail, dto.getEmail())
+                .update();
+        if(!update){
+            throw new BusinessException("修改用户信息失败");
+        }
+    }
+
+    @Override
+    public void updatePassword(UserPasswordDto userPasswordDto) {
+        User loginUser = SecurityUtils.getLoginUser();
+        if(!SecurityUtils.matchesPassword(userPasswordDto.getOldPassword(),loginUser.getPassword())){
+            throw new BusinessException("修改密码失败,旧密码错误");
+        }
+        if(SecurityUtils.matchesPassword(userPasswordDto.getNewPassword(),loginUser.getPassword())){
+            throw new BusinessException("修改密码失败,新密码不能和旧密码相同");
+        }
+        //更新密码
+        boolean update = lambdaUpdate().set(User::getPassword, SecurityUtils.encryptPassword(userPasswordDto.getNewPassword())).update();
+        if(!update){
+            throw new BusinessException("更新密码失败");
+        }
+    }
+
+    private String gengerUserName(String username) {
+        User one = lambdaQuery().eq(User::getUsername, username).one();
+        if(Objects.isNull(one)){
+            return username;
+        }
+        for(int i=0;i<3;i++){
+            String otherUsername=username+CommonUtil.generateCaptchaText(6);
+            User user = lambdaQuery().eq(User::getUsername, username).one();
+            if(Objects.isNull(user)){
+                return otherUsername;
+            }
+        }
+        throw new BusinessException("生成用户名失败");
+    }
+
 }
 

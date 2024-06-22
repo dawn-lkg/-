@@ -1,6 +1,5 @@
 package com.dawn.dawn.common.system.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -24,7 +23,6 @@ public class UserInfo implements Serializable {
     /**
      * 用户名
      */
-    @JsonProperty("userName")
     private String username;
 
     /**
@@ -40,7 +38,6 @@ public class UserInfo implements Serializable {
     /**
      * 用户姓名（昵称）
      */
-    @JsonProperty("nickName")
     private String nickname;
     /**
      * 性别 0男 1女
@@ -49,7 +46,7 @@ public class UserInfo implements Serializable {
     /**
      * 手机号
      */
-    private String phoneNumber;
+    private String phonenumber;
     /**
      * 用户邮箱
      */
