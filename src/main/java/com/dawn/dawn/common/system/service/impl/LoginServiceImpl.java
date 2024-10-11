@@ -50,6 +50,8 @@ public class LoginServiceImpl implements LoginService {
     private MenuService menuService;
     @Autowired
     private GitHubOAuthService gitHubOAuthService;
+    @Autowired
+    private TokenService tokenService;
 
     @Override
     public String login(LoginDto loginDto) {
@@ -67,9 +69,9 @@ public class LoginServiceImpl implements LoginService {
         //设置权限
         setAuthorities(user);
         //设置操作信息
-        setOperation(user);
+        tokenService.setUserAgent(user);
         //保存到缓存
-        redisCache.setCacheObject(RedisConstants.LOGINUSER+user.getUserId(),user,RedisConstants.LOGIN_EXPIRED, TimeUnit.MINUTES);
+        tokenService.refreshToken(user);
         //生成凭证
         String jwt= JwtUtil.createJWT(String.valueOf(user.getUserId()));
         operationRecordService.recordLogin(loginDto.getUsername(), Constants.SYSTEM_RECORD_SUCCESS,"登录成功",this.getClass().getName());

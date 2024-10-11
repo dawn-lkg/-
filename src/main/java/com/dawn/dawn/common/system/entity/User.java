@@ -1,8 +1,5 @@
 package com.dawn.dawn.common.system.entity;
 
-import java.util.Collection;
-import java.util.Date;
-
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -13,6 +10,8 @@ import lombok.experimental.Accessors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -75,6 +74,11 @@ public class User implements UserDetails {
      */
     @TableField(exist = false)
     private String os;
+    /**
+     * 过期时间
+     */
+    @TableField(exist = false)
+    private Long expireTime;
     /**
      * 浏览器
      */

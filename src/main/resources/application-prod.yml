@@ -33,6 +33,8 @@ server:
 
 ip:
   xdbPath: /data/csdn-ip2region.xdb
+upload:
+  path: /path/file/
 file:
   url: http://120.27.215.0
   path: /files

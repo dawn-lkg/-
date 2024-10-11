@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,28 +16,27 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.annotation.Resource;
 
-
-/**
- * @author chenliming
- * @date 2023/8/5 11:44
- */
+@Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Resource
+    private UserDetailsService userDetailsService;
+
+    @Resource
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Resource
+    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
+
+    @Resource
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    @Resource
-    private UserDetailsService userDetailsService;
-    @Resource
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    @Resource
-    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    @Resource
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -44,19 +44,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/login","/captcha","/files/***","/login-github").permitAll()
-                .antMatchers().permitAll()
+                .antMatchers("/login", "/captcha", "/files/**", "/login-github").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()
                 .accessDeniedHandler(jwtAccessDeniedHandler)
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()
-                .logout().disable();
-
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .cors();
-
+                .logout().disable()
+                .cors() // 将 CORS 配置放在这里
+                .and()
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
@@ -66,4 +64,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+//        web.ignoring().antMatchers("/abcd/**");
+    }
+
+
 }
+

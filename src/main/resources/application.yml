@@ -1,5 +1,9 @@
 server:
   port: 8081
+  servlet:
+    multipart:
+      maxFileSize: 5000MB
+      maxRequestSize: 5000MB
 spring:
   profiles:
     active: dev
@@ -8,6 +12,8 @@ spring:
     port: 587
     username: 2360187899@qq.com
     password: eafneqgwbbeeeadj
+  jackson:
+    time-zone: GMT+8
 mybatis-plus:
   mapper-locations: classpath*:com/dawn/dawn/**/xml/*.xml
   globalConfig:

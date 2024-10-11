@@ -31,6 +31,10 @@ public class Constants {
      */
     public static final String TOKEN_HEADER_NAME = "Token";
     /**
+     * token 通过websocket 传递的名称
+     */
+    public static final String TOKEN_WEBSOCKET_NAME = "token";
+    /**
      * 无权限错误码
      */
     public static final int UNAUTHORIZED_CODE = 403;

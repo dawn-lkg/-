@@ -21,7 +21,7 @@ import java.util.UUID;
 public class JwtUtil {
 
     //有效期为
-    public static final Long JWT_TTL = 24*60 * 60 *1000L;// 60 * 60 *1000  一个小时
+    public static final Long JWT_TTL = 24*24*60 * 60 *1000L;// 60 * 60 *1000  一个小时
     //设置秘钥明文
     public static final String JWT_KEY = "clm";
 
@@ -66,8 +66,8 @@ public class JwtUtil {
                 .setSubject(subject)   // 主题  可以是JSON数据
                 .setIssuer("sg")     // 签发者
                 .setIssuedAt(now)      // 签发时间
-                .signWith(signatureAlgorithm, secretKey) //使用HS256对称加密算法签名, 第二个参数为秘钥
-                .setExpiration(expDate);
+                .signWith(signatureAlgorithm, secretKey); //使用HS256对称加密算法签名, 第二个参数为秘钥
+//                .setExpiration(expDate);
     }
 
     /**
@@ -120,7 +120,7 @@ public class JwtUtil {
      * @return String
      */
     public static String getAccessToken(HttpServletRequest request) {
-        String access_token = ServletUtil.getHeaderIgnoreCase(request, Constants.TOKEN_HEADER_NAME);
+        String access_token =WebSocketUtils.isWebSocketRequest(request)?request.getParameter(Constants.TOKEN_WEBSOCKET_NAME):ServletUtil.getHeaderIgnoreCase(request, Constants.TOKEN_HEADER_NAME);
         if (StrUtil.isNotBlank(access_token)) {
             if (access_token.startsWith(Constants.TOKEN_TYPE)) {
                 access_token = StrUtil.removePrefix(access_token, Constants.TOKEN_TYPE).trim();
